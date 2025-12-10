@@ -46,7 +46,7 @@ api.interceptors.response.use(
       case 404:
         return Promise.reject(new Error('لم يتم العثور على المورد المطلوب'));
 
-      case 422:
+      case 422: {
         // Handle validation errors
         const validationErrors = error.response.data?.errors;
         if (validationErrors) {
@@ -54,6 +54,7 @@ api.interceptors.response.use(
           return Promise.reject(new Error(errorMessage));
         }
         return Promise.reject(new Error('بيانات غير صالحة'));
+      }
 
       case 500:
         console.error('Server error:', error);
