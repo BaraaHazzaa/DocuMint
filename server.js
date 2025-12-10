@@ -1,9 +1,9 @@
+/* eslint-env node */
 import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -27,45 +27,52 @@ app.use((req, res, next) => {
   setTimeout(() => next(), 800);
 });
 
-// Custom routes
-server.post('/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  const users = router.db.get('users').value();
-  const user = users.find(u => u.email === email && u.password === password);
+// Custom simple auth routes that read the mock DB (safe for dev only)
+app.post('/auth/login', (req, res) => {
+  const { email, password: inputPassword } = req.body;
+  try {
+    const dbPath = join(__dirname, 'mock', 'db.json');
+    const dbRaw = fs.readFileSync(dbPath, 'utf8');
+    const db = JSON.parse(dbRaw);
+    const users = db.users || [];
 
-  if (user) {
-    // Remove password from response
-    const { password, ...userWithoutPassword } = user;
-    res.json({
-      user: userWithoutPassword,
-      token: 'mock-jwt-token-' + user.id
-    });
-  } else {
-    res.status(401).json({ message: 'Invalid credentials' });
-  }
-});
+    const user = users.find(u => u.email === email && (u.password ? u.password === inputPassword : true));
 
-server.get('/auth/me', (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer mock-jwt-token-')) {
-    const userId = authHeader.split('-')[3];
-    const user = router.db.get('users').find({ id: parseInt(userId) }).value();
-    
     if (user) {
-      const { password, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } else {
-      res.status(401).json({ message: 'User not found' });
+      const { password: _password, ...userWithoutPassword } = user;
+      return res.json({ user: userWithoutPassword, token: `mock-jwt-token-${user.id}` });
     }
-  } else {
-    res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ message: 'Invalid credentials' });
+  } catch (err) {
+    console.error('Auth error:', err);
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Use router
-server.use(router);
+app.get('/auth/me', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer mock-jwt-token-')) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
 
-const port = 3001;
-server.listen(port, () => {
-  console.log(`Mock API Server is running on http://localhost:${port}`);
+  const userId = authHeader.replace('Bearer mock-jwt-token-', '').trim();
+  try {
+    const dbPath = join(__dirname, 'mock', 'db.json');
+    const dbRaw = fs.readFileSync(dbPath, 'utf8');
+    const db = JSON.parse(dbRaw);
+    const users = db.users || [];
+    const user = users.find(u => String(u.id) === String(userId));
+
+  if (!user) return res.status(401).json({ message: 'User not found' });
+  const { password: _password, ...userWithoutPassword } = user;
+  return res.json(userWithoutPassword);
+  } catch (err) {
+    console.error('Auth me error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+const port = process.env.PORT || 3001;
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });

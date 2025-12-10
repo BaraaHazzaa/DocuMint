@@ -11,30 +11,36 @@ export function useNotificationManager(options = {}) {
   const [error, setError] = useState(null);
 
   // Initialize notification handlers
+  const memoHandleApprovalRequest = useCallback((n) => handleApprovalRequest(n), [handleApprovalRequest]);
+  const memoHandleApproval = useCallback((n) => handleApproval(n), [handleApproval]);
+  const memoHandleRejection = useCallback((n) => handleRejection(n), [handleRejection]);
+  const memoHandleEscalation = useCallback((n) => handleEscalation(n), [handleEscalation]);
+  const memoHandleReminder = useCallback((n) => handleReminder(n), [handleReminder]);
+
   useEffect(() => {
     if (!user) return;
 
-    // Register handlers for different notification types
-    notificationService.registerHandler(NOTIFICATION_TYPES.PENDING_APPROVAL, handleApprovalRequest);
-    notificationService.registerHandler(NOTIFICATION_TYPES.APPROVED, handleApproval);
-    notificationService.registerHandler(NOTIFICATION_TYPES.REJECTED, handleRejection);
-    notificationService.registerHandler(NOTIFICATION_TYPES.ESCALATED, handleEscalation);
-    notificationService.registerHandler(NOTIFICATION_TYPES.REMINDER, handleReminder);
-    
-    // Initialize socket connection
+    notificationService.registerHandler(NOTIFICATION_TYPES.PENDING_APPROVAL, memoHandleApprovalRequest);
+    notificationService.registerHandler(NOTIFICATION_TYPES.APPROVED, memoHandleApproval);
+    notificationService.registerHandler(NOTIFICATION_TYPES.REJECTED, memoHandleRejection);
+    notificationService.registerHandler(NOTIFICATION_TYPES.ESCALATED, memoHandleEscalation);
+    notificationService.registerHandler(NOTIFICATION_TYPES.REMINDER, memoHandleReminder);
+
     const socket = notificationService.initializeSocket(sessionStorage.getItem('token'));
-    
     return () => {
       socket.disconnect();
     };
-  }, [user]);
+  }, [user, memoHandleApprovalRequest, memoHandleApproval, memoHandleRejection, memoHandleEscalation, memoHandleReminder]);
 
   // Load initial notifications
+  const memoLoadNotifications = useCallback(() => {
+    loadNotifications();
+  }, [/* loadNotifications uses options and user */]);
+
   useEffect(() => {
     if (!user) return;
-    
-    loadNotifications();
-  }, [user]);
+    memoLoadNotifications();
+  }, [user, memoLoadNotifications]);
 
   const loadNotifications = async () => {
     try {
