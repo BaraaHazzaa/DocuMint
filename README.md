@@ -181,7 +181,7 @@ DocuMint/
 
 ## License
 
-This project is private and confidential. All rights reserved.
+This project used GNU v3.0 As It's licensing.
 
 ## Support
 
