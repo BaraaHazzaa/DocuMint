@@ -19,7 +19,7 @@ export default function ApprovalActionUI({
   loading = false,
   requiresSignature = true
 }) {
-  const [actionType, setActionType] = useState(null);
+  const [_actionType, setActionType] = useState(null);
   const [comment, setComment] = useState('');
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [error, setError] = useState('');

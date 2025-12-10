@@ -44,15 +44,15 @@ export function NotificationProvider({ children }) {
         console.info('Notification socket connected');
       });
 
-      socket.on('connect_error', (err) => {
-        console.warn('Notification socket connect error:', err && err.message ? err.message : err);
-      });
+        socket.on('connect_error', (_err) => {
+          console.warn('Notification socket connect error:', _err && _err.message ? _err.message : _err);
+        });
 
       socket.on('notification', (notification) => {
         try {
           addNotification(notification);
-        } catch (e) {
-          console.error('Error handling incoming notification:', e);
+        } catch (_e) {
+          console.error('Error handling incoming notification:', _e);
         }
       });
     } catch (err) {
@@ -63,7 +63,7 @@ export function NotificationProvider({ children }) {
     return () => {
       try {
         socket?.disconnect();
-      } catch (e) {
+      } catch {
         /* ignore disconnect errors */
       }
     };

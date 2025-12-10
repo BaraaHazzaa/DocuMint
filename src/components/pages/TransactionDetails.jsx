@@ -34,14 +34,14 @@ export default function TransactionDetails() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { processAction, getWorkflowStatus, canTakeAction } = useWorkflow();
-  const { notifications } = useNotificationManager();
+  const { notifications: _notifications } = useNotificationManager();
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [workflowStatus, setWorkflowStatus] = useState(null);
-  const [signature, setSignature] = useState(null);
-  const [actionType, setActionType] = useState(null);
+  const [_signature, setSignature] = useState(null);
+  const [_actionType, _setActionType] = useState(null);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [actionError, setActionError] = useState('');
 
@@ -68,14 +68,7 @@ export default function TransactionDetails() {
     fetchTransactionData();
   }, [id, getWorkflowStatus]);
 
-  const handleActionClick = (action) => {
-    setActionType(action);
-    if (action === WORKFLOW_ACTIONS.APPROVE) {
-      setShowSignatureDialog(true);
-    } else {
-      handleAction(action);
-    }
-  };
+  // Note: ApprovalActionUI calls onAction directly; handleActionClick was removed
 
   const handleAction = async (action, signatureData = null) => {
     try {

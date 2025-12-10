@@ -41,7 +41,7 @@ export const NOTIFICATION_TYPES = {
   COMMENT: 'comment',
 };
 
-const workflowRules = {
+const _workflowRules = {
   [IMPORTANCE_LEVELS.LOW]: {
     route: ['MANAGER_REVIEW', 'COMPLETED'],
     escalationTime: 48, // hours
@@ -92,6 +92,7 @@ export function WorkflowProvider({ children }) {
   };
 
   const calculateDeadline = (importance, approverIndex) => {
+    // Add a small offset per approver to stagger deadlines
     const baseHours = {
       [IMPORTANCE_LEVELS.LOW]: 72,
       [IMPORTANCE_LEVELS.MEDIUM]: 48,
@@ -99,8 +100,10 @@ export function WorkflowProvider({ children }) {
       [IMPORTANCE_LEVELS.URGENT]: 12
     };
 
+    const offset = Number(approverIndex || 0) * 1; // 1 hour per approver
+
     const deadline = new Date();
-    deadline.setHours(deadline.getHours() + baseHours[importance]);
+    deadline.setHours(deadline.getHours() + baseHours[importance] + offset);
     return deadline;
   };
 

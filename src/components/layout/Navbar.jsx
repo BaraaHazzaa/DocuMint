@@ -28,7 +28,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { notifications, unreadCount } = useNotifications();
+  const { notifications: _notifications, unreadCount } = useNotifications();
   
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);

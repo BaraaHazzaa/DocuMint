@@ -10,7 +10,7 @@ import {
   Button,
   Alert,
 } from '@mui/material';
-import { useNotifications } from '../../context/NotificationContext';
+import { useNotifications as _useNotifications } from '../../context/NotificationContext';
 
 export default function NotificationPreferences() {
   const [preferences, setPreferences] = useState({

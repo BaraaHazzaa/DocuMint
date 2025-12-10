@@ -23,7 +23,7 @@ import { transactionService } from '../../services/api';
 export default function Dashboard() {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, _setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ status: '', role: '' });
 

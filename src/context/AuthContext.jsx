@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
           // Fallback: token might be a plain base64-encoded JSON (older mock)
           try {
             tokenData = JSON.parse(atob(token));
-          } catch (e) {
+          } catch {
             throw new Error('Invalid token format');
           }
         }
@@ -128,8 +128,8 @@ export const AuthProvider = ({ children }) => {
     // Invalidate token on server (to be implemented)
     try {
       // api.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch (_error) {
+      console.error('Logout error:', _error);
     }
   };
 

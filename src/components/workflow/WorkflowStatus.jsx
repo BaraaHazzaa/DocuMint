@@ -2,7 +2,7 @@ import { Box, Typography, Paper } from '@mui/material';
 import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot } from '@mui/lab';
 import { WORKFLOW_STEPS } from '../../context/WorkflowContext';
 
-const stepStatus = {
+const _stepStatus = {
   initiated: { color: 'info', label: 'تم البدء' },
   in_progress: { color: 'warning', label: 'قيد المراجعة' },
   completed: { color: 'success', label: 'مكتمل' },

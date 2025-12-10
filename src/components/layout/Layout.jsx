@@ -4,7 +4,7 @@ import Footer from './Footer';
 
 export default function Layout({ children }) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const _isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <Box

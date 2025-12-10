@@ -61,7 +61,7 @@ export default function Login() {
       // Reset attempts on successful login
       setLoginAttempts(0);
       navigate('/dashboard', { replace: true });
-    } catch (err) {
+    } catch {
       setLoginAttempts(prev => prev + 1);
       
       // Implement lockout after 3 failed attempts

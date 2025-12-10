@@ -40,7 +40,7 @@ export default function Profile() {
         type: 'success',
         text: 'تم تحديث الملف الشخصي بنجاح'
       });
-    } catch (error) {
+    } catch {
       setMessage({
         type: 'error',
         text: 'فشل تحديث الملف الشخصي'
@@ -69,7 +69,7 @@ export default function Profile() {
         newPassword: '',
         confirmPassword: ''
       }));
-    } catch (error) {
+    } catch {
       setMessage({
         type: 'error',
         text: 'فشل تغيير كلمة المرور'

@@ -7,8 +7,8 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function SignatureSection({ transactionId, onSignatureComplete }) {
   const [isSignatureModalOpen, setIsSignatureModalOpen] = useState(false);
-  const { user } = useAuth();
-  const { loading, signDocument, verifySignature } = useSignature();
+  const { user: _user } = useAuth();
+  const { loading, signDocument, verifySignature: _verifySignature } = useSignature();
 
   const handleSignatureComplete = async (signatureData) => {
     try {

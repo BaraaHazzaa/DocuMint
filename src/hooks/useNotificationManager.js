@@ -33,16 +33,7 @@ export function useNotificationManager(options = {}) {
   }, [user, memoHandleApprovalRequest, memoHandleApproval, memoHandleRejection, memoHandleEscalation, memoHandleReminder]);
 
   // Load initial notifications
-  const memoLoadNotifications = useCallback(() => {
-    loadNotifications();
-  }, [/* loadNotifications uses options and user */]);
-
-  useEffect(() => {
-    if (!user) return;
-    memoLoadNotifications();
-  }, [user, memoLoadNotifications]);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await notificationService.getPendingNotifications({
@@ -57,7 +48,16 @@ export function useNotificationManager(options = {}) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, options]);
+
+  const memoLoadNotifications = useCallback(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    if (!user) return;
+    memoLoadNotifications();
+  }, [user, memoLoadNotifications]);
 
   // Notification handlers
   const handleApprovalRequest = useCallback((notification) => {

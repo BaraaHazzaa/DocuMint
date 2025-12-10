@@ -121,7 +121,7 @@ export default function NewTransaction() {
       navigate('/dashboard', { 
         state: { message: 'تم إنشاء المعاملة بنجاح' }
       });
-    } catch (err) {
+    } catch {
       setError('فشل إنشاء المعاملة. يرجى المحاولة مرة أخرى.');
       setActiveStep(0); // Return to first step on error
     } finally {
