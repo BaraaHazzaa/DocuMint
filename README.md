@@ -185,4 +185,4 @@ This project used GNU v3.0 As It's licensing.
 
 ## Support
 
-For support and inquiries, please contact [contact information]
+For support and inquiries, please contact |baraa-hazaa00@hotmail.com|
