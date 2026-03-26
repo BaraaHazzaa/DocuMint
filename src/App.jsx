@@ -83,11 +83,11 @@ function App() {
                       <Route
                         path="/*"
                         element={
-                          <PrivateRoute>
+                          <ProtectedRoute>
                             <Layout>
                               <AppRoutes />
                             </Layout>
-                          </PrivateRoute>
+                          </ProtectedRoute>
                         }
                       />
                     </Routes>
