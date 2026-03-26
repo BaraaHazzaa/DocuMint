@@ -72,6 +72,42 @@ app.get('/auth/me', (req, res) => {
   }
 });
 
+// Get all users with pagination and search
+app.get('/users', (req, res) => {
+  try {
+    const dbPath = join(__dirname, 'mock', 'db.json');
+    const dbRaw = fs.readFileSync(dbPath, 'utf8');
+    const db = JSON.parse(dbRaw);
+    let users = db.users || [];
+
+    const { page = 0, pageSize = 10, search = '' } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const size = parseInt(pageSize, 10);
+    const searchQuery = search.toLowerCase();
+
+    if (searchQuery) {
+      users = users.filter(user =>
+        user.name.toLowerCase().includes(searchQuery) ||
+        user.email.toLowerCase().includes(searchQuery)
+      );
+    }
+
+    const total = users.length;
+    const paginatedUsers = users.slice(pageNumber * size, (pageNumber + 1) * size);
+
+    // Omit password from all users
+    const safeUsers = paginatedUsers.map(u => {
+      const { password, ...userWithoutPassword } = u;
+      return userWithoutPassword;
+    });
+
+    res.json({ data: safeUsers, total });
+  } catch (err) {
+    console.error('Get users error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

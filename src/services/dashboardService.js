@@ -38,4 +38,23 @@ export const dashboardService = {
       }, 1500); // 1.5-second delay
     });
   },
+
+  async getChartData(role) {
+    console.log(`Fetching chart data for role: ${role}`);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Mock data for the chart
+        const data = [
+          { name: 'Jan', completed: 40, pending: 24 },
+          { name: 'Feb', completed: 30, pending: 13 },
+          { name: 'Mar', completed: 20, pending: 98 },
+          { name: 'Apr', completed: 27, pending: 39 },
+          { name: 'May', completed: 18, pending: 48 },
+          { name: 'Jun', completed: 23, pending: 38 },
+          { name: 'Jul', completed: 34, pending: 43 },
+        ];
+        resolve(data);
+      }, 1200);
+    });
+  }
 };

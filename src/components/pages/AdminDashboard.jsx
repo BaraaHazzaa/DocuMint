@@ -6,13 +6,15 @@ import {
   ErrorOutline,
   Dns,
 } from '@mui/icons-material';
-import SectionHeader from '../common/SectionHeader';
 import StatWidget from '../dashboard/StatWidget';
 import { dashboardService } from '../../services/dashboardService';
 import { useAuth } from '../../context/AuthContext';
+import WelcomeHeader from '../dashboard/WelcomeHeader';
+import { useTranslation } from 'react-i18next';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -35,34 +37,15 @@ const AdminDashboard = () => {
   }, [user]);
 
   const widgets = [
-    {
-      title: 'إجمالي المستخدمين',
-      value: stats.totalUsers,
-      icon: <People fontSize="large" />,
-    },
-    {
-      title: 'إجمالي المعاملات',
-      value: stats.totalTransactions,
-      icon: <ReceiptLong fontSize="large" />,
-    },
-    {
-      title: 'أخطاء النظام',
-      value: stats.systemErrors,
-      icon: <ErrorOutline fontSize="large" />,
-    },
-    {
-      title: 'الجلسات النشطة',
-      value: stats.activeSessions,
-      icon: <Dns fontSize="large" />,
-    },
+    { title: t('dashboard.admin.total_users'), value: stats.totalUsers, icon: <People />, color: 'primary' },
+    { title: t('dashboard.admin.total_transactions'), value: stats.totalTransactions, icon: <ReceiptLong />, color: 'secondary' },
+    { title: t('dashboard.admin.system_errors'), value: stats.systemErrors, icon: <ErrorOutline />, color: 'error' },
+    { title: t('dashboard.admin.active_sessions'), value: stats.activeSessions, icon: <Dns />, color: 'warning' },
   ];
 
   return (
     <Box>
-      <SectionHeader
-        title="لوحة تحكم المسؤول"
-        subtitle="إدارة النظام والمستخدمين"
-      />
+      <WelcomeHeader />
       <Grid container spacing={3}>
         {widgets.map((widget, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
@@ -71,6 +54,7 @@ const AdminDashboard = () => {
               title={widget.title}
               value={widget.value}
               icon={widget.icon}
+              color={widget.color}
             />
           </Grid>
         ))}

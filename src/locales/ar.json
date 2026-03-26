@@ -1,13 +1,59 @@
 {
   "login": {
     "title": "تسجيل الدخول",
-    "username": "اسم المستخدم",
+    "subtitle": "سجل الدخول للمتابعة",
+    "username": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "submit": "دخول",
-    "rememberMe": "تذكرني"
+    "rememberMe": "تذكرني",
+    "loggingIn": "جارِ تسجيل الدخول...",
+    "invalidCredentials": "البيانات שהוזנו אינן נכונות"
   },
   "dashboard": {
-    "welcome": "مرحباً"
+    "welcome": "مرحباً",
+    "welcome_back": "مرحباً بعودتك، {{name}}!",
+    "welcome_subtitle": "إليك آخر المستجدات في حسابك اليوم.",
+    "admin": {
+      "total_users": "إجمالي المستخدمين",
+      "total_transactions": "إجمالي المعاملات",
+      "system_errors": "أخطاء النظام",
+      "active_sessions": "الجلسات النشطة"
+    },
+    "manager": {
+      "pending_approval": "بانتظار الموافقة",
+      "team_completed": "أنجزها الفريق",
+      "overdue": "متأخرة",
+      "team_members": "أعضاء الفريق"
+    },
+    "employee": {
+      "pending": "قيد الانتظار",
+      "approved": "موافق عليها",
+      "rejected": "مرفوضة",
+      "drafts": "المسودات"
+    },
+    "chart": {
+      "title": "نشاط المعاملات الأخير",
+      "loading": "جارِ تحميل الرسم البياني...",
+      "completed": "مكتملة",
+      "pending": "قيد الانتظار"
+    }
+  },
+  "navbar": {
+    "logout": "تسجيل الخروج"
+  },
+  "dataTable": {
+    "searchPlaceholder": "بحث...",
+    "clearSearch": "مسح البحث"
+  },
+  "userManagement": {
+    "title": "إدارة المستخدمين",
+    "subtitle": "عرض و تعديل صلاحيات المستخدمين في النظام",
+    "columns": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "actions": "إجراءات"
+    }
   },
   "newTransaction": {
     "title": "معاملة جديدة",

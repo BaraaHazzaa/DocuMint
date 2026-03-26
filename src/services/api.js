@@ -67,6 +67,8 @@ api.interceptors.response.use(
   }
 );
 
+export default api;
+
 export const transactionService = {
   // Get all transactions (with optional filters)
   async getTransactions(filters = {}) {
@@ -144,6 +146,12 @@ export const transactionService = {
 };
 
 export const userService = {
+  // Get all users (for admin)
+  async getUsers(params = {}) {
+    const response = await api.get('/users', { params });
+    return response.data;
+  },
+
   // Get user profile
   async getProfile() {
     const response = await api.get('/users/profile');

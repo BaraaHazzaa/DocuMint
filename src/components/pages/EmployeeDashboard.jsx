@@ -6,14 +6,16 @@ import {
   HourglassEmpty,
   Cancel,
 } from '@mui/icons-material';
-import SectionHeader from '../common/SectionHeader';
 import StatWidget from '../dashboard/StatWidget';
 import { dashboardService } from '../../services/dashboardService';
 import { useAuth } from '../../context/AuthContext';
 import DraftsList from './DraftsList';
+import WelcomeHeader from '../dashboard/WelcomeHeader';
+import { useTranslation } from 'react-i18next';
 
 const EmployeeDashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -36,34 +38,15 @@ const EmployeeDashboard = () => {
   }, [user]);
 
   const widgets = [
-    {
-      title: 'معاملات قيد الانتظار',
-      value: stats.pending,
-      icon: <HourglassEmpty fontSize="large" />,
-    },
-    {
-      title: 'معاملات موافق عليها',
-      value: stats.approved,
-      icon: <CheckCircleOutline fontSize="large" />,
-    },
-    {
-      title: 'معاملات مرفوضة',
-      value: stats.rejected,
-      icon: <Cancel fontSize="large" />,
-    },
-    {
-      title: 'المسودات',
-      value: stats.drafts,
-      icon: <Drafts fontSize="large" />,
-    },
+    { title: t('dashboard.employee.pending'), value: stats.pending, icon: <HourglassEmpty />, color: 'warning' },
+    { title: t('dashboard.employee.approved'), value: stats.approved, icon: <CheckCircleOutline />, color: 'success' },
+    { title: t('dashboard.employee.rejected'), value: stats.rejected, icon: <Cancel />, color: 'error' },
+    { title: t('dashboard.employee.drafts'), value: stats.drafts, icon: <Drafts />, color: 'info' },
   ];
 
   return (
     <Box>
-      <SectionHeader
-        title="لوحة تحكم الموظف"
-        subtitle="إدارة وتتبع معاملاتك"
-      />
+      <WelcomeHeader />
       <Grid container spacing={3}>
         {widgets.map((widget, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
@@ -72,6 +55,7 @@ const EmployeeDashboard = () => {
               title={widget.title}
               value={widget.value}
               icon={widget.icon}
+              color={widget.color}
             />
           </Grid>
         ))}

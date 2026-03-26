@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -60,63 +61,30 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Mock users for testing
-  const MOCK_USERS = [
-    {
-      email: 'manager@documint.com',
-      password: 'password123',
-      userData: {
-        id: '1',
-        email: 'manager@documint.com',
-        role: 'manager',
-        name: 'مدير النظام'
-      }
-    },
-    {
-      email: 'director@documint.com',
-      password: 'password123',
-      userData: {
-        id: '2',
-        email: 'director@documint.com',
-        role: 'director',
-        name: 'المدير العام'
-      }
-    }
-  ];
-
   const login = async (email, password) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await api.post('/auth/login', { email, password });
+      const { user: userData, token } = response.data;
 
-      // Find user
-      const mockUser = MOCK_USERS.find(user => 
-        user.email === email && user.password === password
-      );
-
-      if (!mockUser) {
-        throw new Error('Invalid credentials');
+      if (!userData || !token) {
+        throw new Error('Invalid response from server');
       }
 
-      // Create a lightweight JWT-like token: header.payload.signature (all base64)
-      const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-      const payload = btoa(JSON.stringify({
-        sub: mockUser.userData.id,
-        email: mockUser.userData.email,
-        exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour expiration
-      }));
-      const signature = btoa('signature');
-      const mockToken = `${header}.${payload}.${signature}`;
+      // Sanitize user data before setting
+      const sanitizedUser = {
+        id: userData.id,
+        email: userData.email,
+        role: userData.role,
+        name: userData.name
+      };
 
-      // Store in sessionStorage
-      sessionStorage.setItem('token', mockToken);
-      sessionStorage.setItem('user', JSON.stringify(mockUser.userData));
-
-      setUser(mockUser.userData);
-      return { token: mockToken, user: mockUser.userData };
+      setUser(sanitizedUser);
+      sessionStorage.setItem('user', JSON.stringify(sanitizedUser));
+      sessionStorage.setItem('token', token);
     } catch (error) {
       console.error('Login error:', error);
-      throw new Error('Login failed');
+      const errorMessage = error.response?.data?.message || error.message || 'An unknown error occurred';
+      throw new Error(errorMessage);
     }
   };
 

@@ -1,4 +1,4 @@
-import { Paper, Typography, Box, CircularProgress } from '@mui/material';
+import { Paper, Typography, Box, CircularProgress, alpha, useTheme } from '@mui/material';
 import SkeletonLoader from '../common/SkeletonLoader';
 
 /**
@@ -9,17 +9,25 @@ import SkeletonLoader from '../common/SkeletonLoader';
  * @param {string|number} props.value - The value of the statistic.
  * @param {React.ReactNode} props.icon - The icon to display.
  * @param {boolean} props.loading - Whether the widget is in a loading state.
+ * @param {string} props.color - The color of the statistic (default: 'primary').
  */
-const StatWidget = ({ title, value, icon, loading }) => {
+const StatWidget = ({ title, value, icon, loading, color = 'primary' }) => {
+  const theme = useTheme();
+  const bgColor = alpha(theme.palette[color].main, 0.1);
+  const iconColor = theme.palette[color].main;
+
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         p: 3,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         height: '100%',
+        backgroundColor: bgColor,
+        borderRadius: theme.shape.borderRadius,
+        border: `1px solid ${alpha(theme.palette[color].main, 0.2)}`,
       }}
     >
       {loading ? (
@@ -27,14 +35,14 @@ const StatWidget = ({ title, value, icon, loading }) => {
       ) : (
         <>
           <Box>
-            <Typography variant="h4" component="p" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h3" component="p" sx={{ fontWeight: 'bold', color: iconColor }}>
               {value}
             </Typography>
             <Typography variant="subtitle1" color="text.secondary">
               {title}
             </Typography>
           </Box>
-          <Box sx={{ color: 'primary.main' }}>{icon}</Box>
+          <Box sx={{ color: iconColor, fontSize: '3rem' }}>{icon}</Box>
         </>
       )}
     </Paper>

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Box, Paper, Chip, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { transactionService } from '../../services/api';
 import DataTable from '../common/DataTable';
 import { Visibility } from '@mui/icons-material';
 import SectionHeader from '../common/SectionHeader';
+import debounce from 'lodash.debounce';
 
 const getStatusChipColor = (status) => {
   switch (status) {
@@ -28,27 +29,38 @@ const TransactionsList = () => {
     page: 0,
     pageSize: 10,
   });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const debouncedSearch = useCallback(
+    debounce((query) => {
+      setSearchQuery(query);
+      setPaginationModel((prev) => ({ ...prev, page: 0 })); // Reset to first page on new search
+    }, 500),
+    []
+  );
 
   useEffect(() => {
     const fetchTransactions = async () => {
       setLoading(true);
       try {
-        // Assuming the service and API support pagination
-        const response = await transactionService.getTransactions({
+        const params = {
           ...paginationModel,
-        });
-        setRows(response.data); // Assuming API returns { data: [], total: number }
-        setRowCount(response.total);
+          search: searchQuery,
+        };
+        const response = await transactionService.getTransactions(params);
+        setRows(response.data || []);
+        setRowCount(response.total || 0);
       } catch (error) {
         console.error('Failed to fetch transactions:', error);
-        // Handle error display in UI
+        setRows([]);
+        setRowCount(0);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTransactions();
-  }, [paginationModel]);
+  }, [paginationModel, searchQuery]);
 
   const columns = [
     { field: 'id', headerName: 'رقم المعاملة', width: 120 },
@@ -85,7 +97,7 @@ const TransactionsList = () => {
   ];
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mt: 4 }}>
+    <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, mt: 4 }}>
       <SectionHeader
         title="قائمة المعاملات"
         subtitle="عرض وتتبع جميع المعاملات"
@@ -97,6 +109,7 @@ const TransactionsList = () => {
         rowCount={rowCount}
         paginationModel={paginationModel}
         onPaginationModelChange={setPaginationModel}
+        onSearch={debouncedSearch}
       />
     </Paper>
   );

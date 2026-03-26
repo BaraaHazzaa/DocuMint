@@ -3,60 +3,129 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   IconButton,
   Badge,
   Box,
   Menu,
   MenuItem,
+  Avatar,
+  ListItemIcon,
+  ListItemText,
+  Drawer,
+  List,
+  ListItemButton,
+  Collapse,
   useTheme,
-  useMediaQuery
+  styled,
 } from '@mui/material';
 import {
-  NotificationsOutlined,
-  AccountCircle,
+  Notifications as NotificationsIcon,
+  AccountCircle as AccountCircleIcon,
   Menu as MenuIcon,
-  Home as HomeIcon
+  Logout as LogoutIcon,
+  Settings as SettingsIcon,
+  ExpandLess,
+  ExpandMore,
+  Dashboard as DashboardIcon,
+  PostAdd as PostAddIcon,
+  People as PeopleIcon,
+  Assessment as AssessmentIcon,
 } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import CanAccess from '../common/CanAccess';
+import { useTranslation } from 'react-i18next';
 
-const navLinks = [
+const NAV_WIDTH = 280;
+
+const navConfig = [
   {
-    label: 'الرئيسية',
+    title: 'الرئيسية',
     path: '/dashboard',
-    icon: <HomeIcon />,
+    icon: <DashboardIcon />,
     allowedRoles: ['employee', 'manager', 'admin', 'executive'],
   },
   {
-    label: 'معاملة جديدة',
+    title: 'معاملة جديدة',
     path: '/transaction/new',
+    icon: <PostAddIcon />,
     allowedRoles: ['employee'],
   },
   {
-    label: 'إدارة المستخدمين',
-    path: '/admin/users',
-    allowedRoles: ['admin'],
-  },
-  {
-    label: 'التقارير',
-    path: '/reports',
-    allowedRoles: ['manager', 'executive', 'admin'],
+    title: 'الإدارة',
+    icon: <SettingsIcon />,
+    allowedRoles: ['admin', 'manager', 'executive'],
+    children: [
+      {
+        title: 'إدارة المستخدمين',
+        path: '/admin/users',
+        icon: <PeopleIcon />,
+        allowedRoles: ['admin'],
+      },
+      {
+        title: 'التقارير',
+        path: '/reports',
+        icon: <AssessmentIcon />,
+        allowedRoles: ['manager', 'executive', 'admin'],
+      },
+    ],
   },
 ];
 
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  color: theme.palette.text.primary,
+  boxShadow: 'none',
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  [theme.breakpoints.up('lg')]: {
+    width: `calc(100% - ${NAV_WIDTH}px)`,
+  },
+}));
+
+function NavItem({ item, open, onMenuClick }) {
+  const { title, path, icon, children } = item;
+  const [openSub, setOpenSub] = useState(false);
+
+  const handleClick = () => {
+    if (children) {
+      setOpenSub((prev) => !prev);
+    } else if (path) {
+      onMenuClick(path);
+    }
+  };
+
+  return (
+    <>
+      <ListItemButton onClick={handleClick} sx={{ py: 1.5, px: 2.5 }}>
+        <ListItemIcon sx={{ minWidth: 40 }}>{icon}</ListItemIcon>
+        <ListItemText primary={title} sx={{ opacity: open ? 1 : 0 }} />
+        {children && (open ? (openSub ? <ExpandLess /> : <ExpandMore />) : null)}
+      </ListItemButton>
+      {children && (
+        <Collapse in={open && openSub} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {children.map((child) => (
+              <CanAccess key={child.title} allowedRoles={child.allowedRoles}>
+                <NavItem item={child} open={open} onMenuClick={onMenuClick} />
+              </CanAccess>
+            ))}
+          </List>
+        </Collapse>
+      )}
+    </>
+  );
+}
+
 export default function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { notifications: _notifications, unreadCount } = useNotifications();
-  
+  const { t } = useTranslation();
+
+  const [openNav, setOpenNav] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
 
   const handleLogout = () => {
     handleCloseMenu();
@@ -64,140 +133,84 @@ export default function Navbar() {
     navigate('/login');
   };
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const handleMenu = (event) => setAnchorEl(event.currentTarget);
+  const handleCloseMenu = () => setAnchorEl(null);
+  const handleNavigation = (path) => navigate(path);
 
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-  };
-
-  const handleMobileMenu = (event) => {
-    setMobileMenuAnchor(event.currentTarget);
-  };
-
-  const handleCloseMobileMenu = () => {
-    setMobileMenuAnchor(null);
-  };
-
-  const handleNavigation = (path) => {
-    handleCloseMobileMenu();
-    handleCloseMenu();
-    navigate(path);
-  };
-
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
-
-  const renderNavLinks = (isMobileMenu = false) =>
-    navLinks.map((link) => (
-      <CanAccess key={link.path} allowedRoles={link.allowedRoles}>
-        {isMobileMenu ? (
-          <MenuItem onClick={() => handleNavigation(link.path)}>
-            {link.label}
-          </MenuItem>
-        ) : (
-          <Button
-            color={isActive(link.path) ? 'primary' : 'inherit'}
-            onClick={() => handleNavigation(link.path)}
-            startIcon={link.icon}
-          >
-            {link.label}
-          </Button>
-        )}
-      </CanAccess>
-    ));
-
+  const renderNavContent = (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        DocuMint
+      </Typography>
+      <List component="nav">
+        {navConfig.map((item) => (
+          <CanAccess key={item.title} allowedRoles={item.allowedRoles}>
+            <NavItem item={item} open={openNav} onMenuClick={handleNavigation} />
+          </CanAccess>
+        ))}
+      </List>
+    </Box>
+  );
 
   return (
-    <AppBar 
-      position="fixed" 
-      dir="rtl"
-      sx={{
-        backgroundColor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}
-    >
-      <Toolbar>
-        {isMobile && user ? (
+    <>
+      <StyledAppBar position="fixed">
+        <Toolbar>
           <IconButton
-            edge="start"
-            color="inherit"
-            onClick={handleMobileMenu}
-            sx={{ mr: 1 }}
+            onClick={() => setOpenNav(!openNav)}
+            sx={{ mr: 1, display: { lg: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
-        ) : null}
-        
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1,
-            fontSize: isMobile ? '1rem' : '1.25rem',
-            fontWeight: 600
+          <Box sx={{ flexGrow: 1 }} />
+          <IconButton color="inherit" onClick={() => navigate('/notifications')}>
+            <Badge badgeContent={unreadCount} color="error">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+          <IconButton color="inherit" onClick={handleMenu}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+              {user?.name?.charAt(0).toUpperCase()}
+            </Avatar>
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleCloseMenu}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          >
+            <MenuItem onClick={() => handleNavigation('/profile')}>
+              <AccountCircleIcon sx={{ mr: 1 }} />
+              {user?.name}
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>
+              <LogoutIcon sx={{ mr: 1 }} />
+              {t('navbar.logout')}
+            </MenuItem>
+          </Menu>
+        </Toolbar>
+      </StyledAppBar>
+
+      <Box
+        component="nav"
+        sx={{ width: { lg: openNav ? NAV_WIDTH : 0 }, flexShrink: { lg: 0 } }}
+      >
+        <Drawer
+          variant="permanent"
+          open={openNav}
+          sx={{
+            display: { xs: 'none', lg: 'block' },
+            '& .MuiDrawer-paper': {
+              width: NAV_WIDTH,
+              boxSizing: 'border-box',
+              borderRight: `1px solid ${theme.palette.divider}`,
+            },
           }}
         >
-          نظام المعاملات الإلكترونية
-        </Typography>
-
-        {user && !isMobile && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {renderNavLinks()}
-            <IconButton
-              color="inherit"
-              onClick={() => handleNavigation('/notifications')}
-            >
-              <Badge badgeContent={unreadCount} color="error">
-                <NotificationsOutlined />
-              </Badge>
-            </IconButton>
-            <IconButton
-              color="inherit"
-              onClick={handleMenu}
-            >
-              <AccountCircle />
-            </IconButton>
-          </Box>
-        )}
-
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleCloseMenu}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'left',
-          }}
-        >
-          <MenuItem onClick={() => handleNavigation('/profile')}>
-            الملف الشخصي
-          </MenuItem>
-          <MenuItem onClick={handleLogout}>تسجيل خروج</MenuItem>
-        </Menu>
-
-        <Menu
-          anchorEl={mobileMenuAnchor}
-          open={Boolean(mobileMenuAnchor)}
-          onClose={handleCloseMobileMenu}
-        >
-          {renderNavLinks(true)}
-          <MenuItem onClick={() => handleNavigation('/notifications')}>
-            الإشعارات
-          </MenuItem>
-          <MenuItem onClick={() => handleNavigation('/profile')}>
-            الملف الشخصي
-          </MenuItem>
-          <MenuItem onClick={handleLogout}>تسجيل خروج</MenuItem>
-        </Menu>
-      </Toolbar>
-    </AppBar>
+          {renderNavContent}
+        </Drawer>
+      </Box>
+    </>
   );
 }
