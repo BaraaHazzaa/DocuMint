@@ -1,0 +1,22 @@
+{
+  "login": {
+    "title": "تسجيل الدخول",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "submit": "دخول",
+    "rememberMe": "تذكرني"
+  },
+  "dashboard": {
+    "welcome": "مرحباً"
+  },
+  "newTransaction": {
+    "title": "معاملة جديدة",
+    "field1": "حقل 1",
+    "field2": "حقل 2",
+    "submit": "إرسال"
+  },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "البريد الإلكتروني غير صالح"
+  }
+}
