@@ -1,5 +1,5 @@
 import { Paper, Typography } from '@mui/material';
-import SectionHeader from '../common/SectionHeader';
+import SectionHeader from '../../common/SectionHeader';
 
 const UserManagement = () => {
   return (
