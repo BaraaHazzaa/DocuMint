@@ -51,7 +51,7 @@ export default function NewTransaction() {
             approvalChain: transaction.approvalChain,
           });
           // Handle file preview if a file exists
-        } catch (err) {
+        } catch {
           setError('فشل تحميل بيانات المعاملة');
         } finally {
           setLoading(false);
@@ -93,7 +93,7 @@ export default function NewTransaction() {
       await transactionService.saveDraft(transactionData, onUploadProgress);
       toast.success('تم حفظ المعاملة كمسودة بنجاح');
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       toast.error('فشل حفظ المسودة. يرجى المحاولة مرة أخرى.');
       setError('فشل حفظ المسودة. يرجى المحاولة مرة أخرى.');
     } finally {
@@ -180,7 +180,7 @@ export default function NewTransaction() {
       
       toast.success(`تم ${isEditing ? 'تحديث' : 'إنشاء'} المعاملة بنجاح`);
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       toast.error('فشل إنشاء المعاملة. يرجى المحاولة مرة أخرى.');
       setError('فشل إنشاء المعاملة. يرجى المحاولة مرة أخرى.');
       setActiveStep(0); // Return to first step on error

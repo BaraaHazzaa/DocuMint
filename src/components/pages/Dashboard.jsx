@@ -62,11 +62,7 @@ export default function Dashboard() {
       case 'admin':
         return <AdminDashboard />;
       default:
-        return (
-          <Box>
-            <Typography>Welcome. Your dashboard is being set up.</Typography>
-          </Box>
-        );
+        return <Typography>No specific dashboard available for your role.</Typography>;
     }
   };
 

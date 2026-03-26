@@ -1,5 +1,3 @@
-import { api } from './api';
-
 export const dashboardService = {
   async getStats(role) {
     // This would typically fetch data based on the user's role

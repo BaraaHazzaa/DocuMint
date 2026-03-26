@@ -47,7 +47,7 @@ const Reports = () => {
       // This would typically trigger a file download
       toast.success('جاري إنشاء التقرير...');
 
-    } catch (error) {
+    } catch {
       toast.error('فشل إنشاء التقرير');
     } finally {
       setLoading(false);

@@ -27,7 +27,7 @@ const DraftsList = () => {
         setLoading(true);
         const data = await transactionService.getDrafts();
         setDrafts(data);
-      } catch (err) {
+      } catch {
         setError('فشل تحميل المسودات');
       } finally {
         setLoading(false);
@@ -46,7 +46,7 @@ const DraftsList = () => {
     try {
       // await transactionService.deleteDraft(id); // This service function needs to be created
       setDrafts(drafts.filter((draft) => draft.id !== id));
-    } catch (err) {
+    } catch {
       setError('فشل حذف المسودة');
     }
   };
