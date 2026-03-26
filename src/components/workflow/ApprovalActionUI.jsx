@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { WORKFLOW_ACTIONS } from '../../context/WorkflowContext';
 import SignatureComponent from '../signature/SignatureComponent';
+import RejectionModal from './RejectionModal';
 
 export default function ApprovalActionUI({
   onAction,
@@ -22,12 +23,15 @@ export default function ApprovalActionUI({
   const [_actionType, setActionType] = useState(null);
   const [comment, setComment] = useState('');
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [error, setError] = useState('');
 
   const handleActionClick = (action) => {
     setActionType(action);
     if (action === WORKFLOW_ACTIONS.APPROVE && requiresSignature) {
       setShowSignatureDialog(true);
+    } else if (action === WORKFLOW_ACTIONS.REJECT) {
+      setShowRejectionModal(true);
     } else {
       handleAction(action);
     }
@@ -42,12 +46,6 @@ export default function ApprovalActionUI({
         setError('التوقيع مطلوب للموافقة');
         return;
       }
-      
-      // Validate comment requirement for rejection
-      if (action === WORKFLOW_ACTIONS.REJECT && !comment.trim()) {
-        setError('التعليق مطلوب عند الرفض');
-        return;
-      }
 
       await onAction({
         action,
@@ -58,6 +56,7 @@ export default function ApprovalActionUI({
       // Clear form state
       setComment('');
       setShowSignatureDialog(false);
+      setShowRejectionModal(false);
       setActionType(null);
     } catch (error) {
       setError(error.message || 'حدث خطأ أثناء معالجة الإجراء');
@@ -66,6 +65,12 @@ export default function ApprovalActionUI({
 
   const handleSignatureSave = (signatureData) => {
     handleAction(WORKFLOW_ACTIONS.APPROVE, signatureData);
+  };
+
+  const handleRejectionSubmit = (rejectionReason) => {
+    setComment(rejectionReason);
+    handleAction(WORKFLOW_ACTIONS.REJECT);
+    setShowRejectionModal(false);
   };
 
   return (
@@ -84,7 +89,7 @@ export default function ApprovalActionUI({
           label="التعليق"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="أضف تعليقًا (اختياري)"
+          placeholder="أضف تعليقًا (اختياري للموافقة)"
         />
       </Box>
 
@@ -132,6 +137,12 @@ export default function ApprovalActionUI({
           />
         </DialogContent>
       </Dialog>
+
+      <RejectionModal
+        open={showRejectionModal}
+        onClose={() => setShowRejectionModal(false)}
+        onSubmit={handleRejectionSubmit}
+      />
     </Box>
   );
 }

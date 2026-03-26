@@ -19,8 +19,13 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { transactionService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+import EmployeeDashboard from './EmployeeDashboard';
+import ManagerDashboard from './ManagerDashboard';
+import AdminDashboard from './AdminDashboard';
 
 export default function Dashboard() {
+  const { user } = useAuth(); // Assuming useAuth() provides user with a role
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [notifications, _setNotifications] = useState([]);
@@ -46,6 +51,23 @@ export default function Dashboard() {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const renderDashboardByRole = () => {
+    switch (user?.role) {
+      case 'employee':
+        return <EmployeeDashboard />;
+      case 'manager':
+        return <ManagerDashboard />;
+      case 'admin':
+        return <AdminDashboard />;
+      default:
+        return (
+          <Box>
+            <Typography>Welcome. Your dashboard is being set up.</Typography>
+          </Box>
+        );
+    }
   };
 
   return (

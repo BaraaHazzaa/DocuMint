@@ -9,71 +9,52 @@ import {
   Avatar,
   Grid,
   Divider,
-  Alert
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
+import { Formik, Form, Field } from 'formik';
+import * as Yup from 'yup';
+import toast from 'react-hot-toast';
+
+const profileValidationSchema = Yup.object().shape({
+  name: Yup.string().required('الاسم مطلوب'),
+  email: Yup.string().email('صيغة البريد الإلكتروني غير صحيحة').required('البريد الإلكتروني مطلوب'),
+});
+
+const passwordValidationSchema = Yup.object().shape({
+  currentPassword: Yup.string().required('كلمة المرور الحالية مطلوبة'),
+  newPassword: Yup.string()
+    .min(8, 'كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل')
+    .required('كلمة المرور الجديدة مطلوبة'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('newPassword'), null], 'كلمات المرور غير متطابقة')
+    .required('تأكيد كلمة المرور الجديدة مطلوب'),
+});
 
 export default function Profile() {
   const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [message, setMessage] = useState({ type: '', text: '' });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleProfileUpdate = (e) => {
-    e.preventDefault();
+  const handleProfileUpdate = (values, { setSubmitting }) => {
     // In a real app, this would call an API
     try {
-      setMessage({
-        type: 'success',
-        text: 'تم تحديث الملف الشخصي بنجاح'
-      });
+      console.log('Updating profile with:', values);
+      toast.success('تم تحديث الملف الشخصي بنجاح');
+      setSubmitting(false);
     } catch {
-      setMessage({
-        type: 'error',
-        text: 'فشل تحديث الملف الشخصي'
-      });
+      toast.error('فشل تحديث الملف الشخصي');
+      setSubmitting(false);
     }
   };
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    if (formData.newPassword !== formData.confirmPassword) {
-      setMessage({
-        type: 'error',
-        text: 'كلمات المرور غير متطابقة'
-      });
-      return;
-    }
+  const handlePasswordChange = (values, { setSubmitting, resetForm }) => {
     // In a real app, this would call an API
     try {
-      setMessage({
-        type: 'success',
-        text: 'تم تغيير كلمة المرور بنجاح'
-      });
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }));
+      console.log('Changing password with:', values);
+      toast.success('تم تغيير كلمة المرور بنجاح');
+      setSubmitting(false);
+      resetForm();
     } catch {
-      setMessage({
-        type: 'error',
-        text: 'فشل تغيير كلمة المرور'
-      });
+      toast.error('فشل تغيير كلمة المرور. يرجى التحقق من كلمة المرور الحالية.');
+      setSubmitting(false);
     }
   };
 
@@ -83,111 +64,127 @@ export default function Profile() {
         الملف الشخصي
       </Typography>
 
-      {message.text && (
-        <Alert severity={message.type} sx={{ mb: 3 }}>
-          {message.text}
-        </Alert>
-      )}
-
-      <Grid container spacing={3}>
+      <Grid container spacing={5}>
         {/* Profile Information */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
               <Avatar
                 sx={{
                   width: 80,
                   height: 80,
                   bgcolor: 'primary.main',
-                  fontSize: '2rem'
+                  fontSize: '2.5rem',
+                  mb: 2
                 }}
               >
-                {user?.name?.charAt(0)}
+                {user?.name?.charAt(0).toUpperCase()}
               </Avatar>
-              <Box sx={{ ml: 2 }}>
-                <Typography variant="h6">{user?.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {user?.role === 'manager' && 'مدير'}
-                  {user?.role === 'director' && 'مدير عام'}
-                </Typography>
-              </Box>
+              <Typography variant="h5">{user?.name}</Typography>
+              <Typography variant="body1" color="textSecondary">
+                {user?.role}
+              </Typography>
             </Box>
 
-            <form onSubmit={handleProfileUpdate}>
-              <TextField
-                fullWidth
-                label="الاسم"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="البريد الإلكتروني"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                margin="normal"
-                type="email"
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-                sx={{ mt: 2 }}
-              >
-                حفظ التغييرات
-              </Button>
-            </form>
+            <Formik
+              initialValues={{ name: user?.name || '', email: user?.email || '' }}
+              validationSchema={profileValidationSchema}
+              onSubmit={handleProfileUpdate}
+            >
+              {({ isSubmitting, errors, touched }) => (
+                <Form>
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    name="name"
+                    label="الاسم"
+                    margin="normal"
+                    error={touched.name && !!errors.name}
+                    helperText={touched.name && errors.name}
+                  />
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    name="email"
+                    label="البريد الإلكتروني"
+                    margin="normal"
+                    type="email"
+                    error={touched.email && !!errors.email}
+                    helperText={touched.email && errors.email}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    disabled={isSubmitting}
+                    sx={{ mt: 2, py: 1.5 }}
+                  >
+                    {isSubmitting ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </Paper>
         </Grid>
 
         {/* Change Password */}
         <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 3 }}>
+          <Paper elevation={3} sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom>
               تغيير كلمة المرور
             </Typography>
-            <form onSubmit={handlePasswordChange}>
-              <TextField
-                fullWidth
-                label="كلمة المرور الحالية"
-                name="currentPassword"
-                type="password"
-                value={formData.currentPassword}
-                onChange={handleChange}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="كلمة المرور الجديدة"
-                name="newPassword"
-                type="password"
-                value={formData.newPassword}
-                onChange={handleChange}
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label="تأكيد كلمة المرور الجديدة"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                margin="normal"
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-                sx={{ mt: 2 }}
-              >
-                تغيير كلمة المرور
-              </Button>
-            </form>
+            <Divider sx={{ my: 2 }} />
+            <Formik
+              initialValues={{ currentPassword: '', newPassword: '', confirmPassword: '' }}
+              validationSchema={passwordValidationSchema}
+              onSubmit={handlePasswordChange}
+            >
+              {({ isSubmitting, errors, touched }) => (
+                <Form>
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    type="password"
+                    name="currentPassword"
+                    label="كلمة المرور الحالية"
+                    margin="normal"
+                    error={touched.currentPassword && !!errors.currentPassword}
+                    helperText={touched.currentPassword && errors.currentPassword}
+                  />
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    type="password"
+                    name="newPassword"
+                    label="كلمة المرور الجديدة"
+                    margin="normal"
+                    error={touched.newPassword && !!errors.newPassword}
+                    helperText={touched.newPassword && errors.newPassword}
+                  />
+                  <Field
+                    as={TextField}
+                    fullWidth
+                    type="password"
+                    name="confirmPassword"
+                    label="تأكيد كلمة المرور الجديدة"
+                    margin="normal"
+                    error={touched.confirmPassword && !!errors.confirmPassword}
+                    helperText={touched.confirmPassword && errors.confirmPassword}
+                  />
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="secondary"
+                    fullWidth
+                    disabled={isSubmitting}
+                    sx={{ mt: 2, py: 1.5 }}
+                  >
+                    {isSubmitting ? 'جاري التغيير...' : 'تغيير كلمة المرور'}
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </Paper>
         </Grid>
       </Grid>

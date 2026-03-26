@@ -37,7 +37,6 @@ export const cacheRtl = createCache({
   stylisPlugins: [prefixer, rtlPlugin],
 });
 
-// Create theme
 export const theme = createTheme({
   direction: 'rtl',
   palette: {

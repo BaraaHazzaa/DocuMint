@@ -8,6 +8,9 @@ import { CacheProvider } from '@emotion/react';
 import { theme, cacheRtl } from './theme';
 import Layout from './components/layout/Layout';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Toaster } from 'react-hot-toast';
 
 // Components
 import Login from './components/pages/Login';
@@ -16,13 +19,23 @@ import Notifications from './components/pages/Notifications';
 import NewTransaction from './components/pages/NewTransaction';
 import TransactionDetails from './components/pages/TransactionDetails';
 import Profile from './components/pages/Profile';
+import Reports from './components/pages/Reports';
+import UserManagement from './components/pages/admin/UserManagement';
 
-// Import Roboto font
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
-
+// This component will contain the routes accessible within the main layout
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/notifications" element={<Notifications />} />
+    <Route path="/transaction/new" element={<NewTransaction />} />
+    <Route path="/transaction/edit/:id" element={<NewTransaction />} />
+    <Route path="/transaction/:id" element={<TransactionDetails />} />
+    <Route path="/profile" element={<Profile />} />
+    <Route path="/reports" element={<Reports />} />
+    <Route path="/admin/users" element={<UserManagement />} />
+    <Route path="/" element={<Navigate to="/dashboard" />} />
+  </Routes>
+);
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
@@ -40,87 +53,52 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    document.body.dir = i18n.dir();
+  }, [i18n, i18n.language]);
+
   return (
-    <ErrorBoundary>
-      <CacheProvider value={cacheRtl}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Router>
-            <AuthProvider>
-              <AlertProvider>
-                <NotificationProvider>
-                  <WorkflowProvider>
+    <CacheProvider value={cacheRtl}>
+      <ThemeProvider theme={theme}>
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          toastOptions={{
+            style: {
+              direction: 'rtl',
+            },
+          }}
+        />
+        <CssBaseline />
+        <AlertProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <WorkflowProvider>
+                <Router>
+                  <ErrorBoundary>
                     <Routes>
                       <Route path="/login" element={<Login />} />
                       <Route
-                        path="/"
+                        path="/*"
                         element={
-                          <ProtectedRoute>
+                          <PrivateRoute>
                             <Layout>
-                              <Navigate to="/dashboard" />
+                              <AppRoutes />
                             </Layout>
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/dashboard"
-                        element={
-                          <ProtectedRoute>
-                            <Layout>
-                              <Dashboard />
-                            </Layout>
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/notifications"
-                        element={
-                          <ProtectedRoute>
-                            <Layout>
-                              <Notifications />
-                            </Layout>
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/transactions/new"
-                        element={
-                          <ProtectedRoute>
-                            <Layout>
-                              <NewTransaction />
-                            </Layout>
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/transactions/:id"
-                        element={
-                          <ProtectedRoute>
-                            <Layout>
-                              <TransactionDetails />
-                            </Layout>
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route
-                        path="/profile"
-                        element={
-                          <ProtectedRoute>
-                            <Layout>
-                              <Profile />
-                            </Layout>
-                          </ProtectedRoute>
+                          </PrivateRoute>
                         }
                       />
                     </Routes>
-                  </WorkflowProvider>
-                </NotificationProvider>
-              </AlertProvider>
-            </AuthProvider>
-          </Router>
-        </ThemeProvider>
-      </CacheProvider>
-    </ErrorBoundary>
+                  </ErrorBoundary>
+                </Router>
+              </WorkflowProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </AlertProvider>
+      </ThemeProvider>
+    </CacheProvider>
   );
 }
 

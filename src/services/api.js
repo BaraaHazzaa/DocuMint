@@ -81,7 +81,7 @@ export const transactionService = {
   },
 
   // Create new transaction
-  async createTransaction(data) {
+  async createTransaction(data, onUploadProgress) {
     const formData = new FormData();
     Object.keys(data).forEach(key => {
       if (key === 'file') {
@@ -94,7 +94,8 @@ export const transactionService = {
     const response = await api.post('/transactions', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      onUploadProgress
     });
     return response.data;
   },
@@ -112,6 +113,32 @@ export const transactionService = {
   // Get transaction history/audit log
   async getTransactionHistory(id) {
     const response = await api.get(`/transactions/${id}/history`);
+    return response.data;
+  },
+
+  // Save transaction as draft
+  async saveDraft(data, onUploadProgress) {
+    const formData = new FormData();
+    Object.keys(data).forEach(key => {
+      if (key === 'file' && data.file) {
+        formData.append('file', data.file);
+      } else if (key !== 'file') {
+        formData.append(key, data[key]);
+      }
+    });
+    
+    const response = await api.post('/transactions/draft', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress
+    });
+    return response.data;
+  },
+
+  // Get all draft transactions for the current user
+  async getDrafts() {
+    const response = await api.get('/transactions/drafts');
     return response.data;
   }
 };

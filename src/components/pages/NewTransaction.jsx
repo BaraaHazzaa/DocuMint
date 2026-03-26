@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Container,
   Typography,
@@ -11,14 +11,19 @@ import {
   Grid,
   Stepper,
   Step,
-  StepLabel
+  StepLabel,
+  LinearProgress,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { transactionService } from '../../services/api';
 import ApprovalChainSelector from '../workflow/ApprovalChainSelector';
 
 export default function NewTransaction() {
   const navigate = useNavigate();
+  const { id } = useParams(); // Get the transaction ID from the URL
+  const isEditing = Boolean(id);
+
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
     title: '',
@@ -30,6 +35,38 @@ export default function NewTransaction() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState({ url: null, type: null, name: '' });
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  useEffect(() => {
+    if (isEditing) {
+      const fetchTransaction = async () => {
+        try {
+          setLoading(true);
+          const transaction = await transactionService.getTransaction(id);
+          setFormData({
+            title: transaction.title,
+            description: transaction.description,
+            importance: transaction.importance,
+            file: transaction.file, // This might need adjustment based on how files are handled
+            approvalChain: transaction.approvalChain,
+          });
+          // Handle file preview if a file exists
+        } catch (err) {
+          setError('فشل تحميل بيانات المعاملة');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchTransaction();
+    }
+  }, [id, isEditing]);
+
+  const onUploadProgress = (progressEvent) => {
+    const percentCompleted = Math.round(
+      (progressEvent.loaded * 100) / progressEvent.total
+    );
+    setUploadProgress(percentCompleted);
+  };
 
   const steps = [
     { label: 'معلومات المعاملة', description: 'أدخل تفاصيل المعاملة الأساسية' },
@@ -46,6 +83,23 @@ export default function NewTransaction() {
 
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
+  };
+
+  const handleSaveDraft = async () => {
+    try {
+      setLoading(true);
+      setUploadProgress(0);
+      const transactionData = { ...formData, status: 'draft' };
+      await transactionService.saveDraft(transactionData, onUploadProgress);
+      toast.success('تم حفظ المعاملة كمسودة بنجاح');
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error('فشل حفظ المسودة. يرجى المحاولة مرة أخرى.');
+      setError('فشل حفظ المسودة. يرجى المحاولة مرة أخرى.');
+    } finally {
+      setLoading(false);
+      setUploadProgress(0);
+    }
   };
 
   const validateCurrentStep = () => {
@@ -77,6 +131,7 @@ export default function NewTransaction() {
     const { name, value, files } = e.target;
     if (name === 'file') {
       const file = files[0];
+      setUploadProgress(0); // Reset progress on new file selection
       if (file) {
         setFormData((prev) => ({ ...prev, file }));
         // Create preview for images, show file info for PDFs and other files
@@ -108,8 +163,8 @@ export default function NewTransaction() {
     try {
       setError('');
       setLoading(true);
+      setUploadProgress(0);
 
-      // Add workflow metadata
       const transactionData = {
         ...formData,
         status: 'pending',
@@ -117,15 +172,21 @@ export default function NewTransaction() {
         currentApprover: formData.approvalChain[0]?.approverId,
       };
 
-      await transactionService.createTransaction(transactionData);
-      navigate('/dashboard', { 
-        state: { message: 'تم إنشاء المعاملة بنجاح' }
-      });
-    } catch {
+      if (isEditing) {
+        // await transactionService.updateTransaction(id, transactionData, onUploadProgress);
+      } else {
+        await transactionService.createTransaction(transactionData, onUploadProgress);
+      }
+      
+      toast.success(`تم ${isEditing ? 'تحديث' : 'إنشاء'} المعاملة بنجاح`);
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error('فشل إنشاء المعاملة. يرجى المحاولة مرة أخرى.');
       setError('فشل إنشاء المعاملة. يرجى المحاولة مرة أخرى.');
       setActiveStep(0); // Return to first step on error
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -240,6 +301,11 @@ export default function NewTransaction() {
                       </Typography>
                     </Box>
                   )}
+                  {uploadProgress > 0 && uploadProgress < 100 && (
+                    <Box sx={{ width: '100%', mt: 2 }}>
+                      <LinearProgress variant="determinate" value={uploadProgress} />
+                    </Box>
+                  )}
                 </Paper>
               </Grid>
             )}
@@ -289,7 +355,7 @@ export default function NewTransaction() {
     <Container maxWidth="md" sx={{ py: 4 }} dir="rtl">
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
-          إنشاء معاملة جديدة
+          {isEditing ? 'تعديل المعاملة' : 'إنشاء معاملة جديدة'}
         </Typography>
 
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
@@ -320,6 +386,17 @@ export default function NewTransaction() {
           >
             السابق
           </Button>
+
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={handleSaveDraft}
+            disabled={loading}
+            sx={{ mx: 1 }}
+          >
+            حفظ كمسودة
+          </Button>
+
           {activeStep === steps.length - 1 ? (
             <Button
               variant="contained"
@@ -327,7 +404,7 @@ export default function NewTransaction() {
               onClick={handleSubmit}
               disabled={loading}
             >
-              {loading ? 'جاري الإنشاء...' : 'إنشاء المعاملة'}
+              {loading ? 'جاري الحفظ...' : isEditing ? 'تحديث المعاملة' : 'إنشاء المعاملة'}
             </Button>
           ) : (
             <Button

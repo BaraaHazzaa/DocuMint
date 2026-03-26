@@ -21,6 +21,31 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
+import CanAccess from '../common/CanAccess';
+
+const navLinks = [
+  {
+    label: 'الرئيسية',
+    path: '/dashboard',
+    icon: <HomeIcon />,
+    allowedRoles: ['employee', 'manager', 'admin', 'executive'],
+  },
+  {
+    label: 'معاملة جديدة',
+    path: '/transaction/new',
+    allowedRoles: ['employee'],
+  },
+  {
+    label: 'إدارة المستخدمين',
+    path: '/admin/users',
+    allowedRoles: ['admin'],
+  },
+  {
+    label: 'التقارير',
+    path: '/reports',
+    allowedRoles: ['manager', 'executive', 'admin'],
+  },
+];
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -65,6 +90,26 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
+  const renderNavLinks = (isMobileMenu = false) =>
+    navLinks.map((link) => (
+      <CanAccess key={link.path} allowedRoles={link.allowedRoles}>
+        {isMobileMenu ? (
+          <MenuItem onClick={() => handleNavigation(link.path)}>
+            {link.label}
+          </MenuItem>
+        ) : (
+          <Button
+            color={isActive(link.path) ? 'primary' : 'inherit'}
+            onClick={() => handleNavigation(link.path)}
+            startIcon={link.icon}
+          >
+            {link.label}
+          </Button>
+        )}
+      </CanAccess>
+    ));
+
+
   return (
     <AppBar 
       position="fixed" 
@@ -101,19 +146,7 @@ export default function Navbar() {
 
         {user && !isMobile && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Button
-              color={isActive('/dashboard') ? 'primary' : 'inherit'}
-              onClick={() => handleNavigation('/dashboard')}
-              startIcon={<HomeIcon />}
-            >
-              الرئيسية
-            </Button>
-            <Button
-              color={isActive('/transactions/new') ? 'primary' : 'inherit'}
-              onClick={() => handleNavigation('/transactions/new')}
-            >
-              معاملة جديدة
-            </Button>
+            {renderNavLinks()}
             <IconButton
               color="inherit"
               onClick={() => handleNavigation('/notifications')}
@@ -155,12 +188,7 @@ export default function Navbar() {
           open={Boolean(mobileMenuAnchor)}
           onClose={handleCloseMobileMenu}
         >
-          <MenuItem onClick={() => handleNavigation('/dashboard')}>
-            الرئيسية
-          </MenuItem>
-          <MenuItem onClick={() => handleNavigation('/transactions/new')}>
-            معاملة جديدة
-          </MenuItem>
+          {renderNavLinks(true)}
           <MenuItem onClick={() => handleNavigation('/notifications')}>
             الإشعارات
           </MenuItem>
