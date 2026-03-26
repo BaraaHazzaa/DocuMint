@@ -73,6 +73,9 @@ export default function Dashboard() {
           لوحة التحكم
         </Typography>
         
+        {/* Render the role-specific dashboard */}
+        {renderDashboardByRole()}
+
         {/* Summary Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
