@@ -54,6 +54,7 @@ const ManagerDashboard = () => {
     <Box>
       <WelcomeHeader />
       <Grid container spacing={3}>
+        {/* Top Row Widgets */}
         {widgets.map((widget, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
             <StatWidget
@@ -65,10 +66,12 @@ const ManagerDashboard = () => {
             />
           </Grid>
         ))}
-        <Grid item xs={12}>
+
+        {/* Bottom Row Content */}
+        <Grid item xs={12} lg={8}>
           <RecentTransactionsChart data={chartData} loading={loading} />
         </Grid>
-        <Grid item xs={12}>
+        <Grid item xs={12} lg={4}>
           <TransactionsList />
         </Grid>
       </Grid>

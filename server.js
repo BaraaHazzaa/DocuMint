@@ -108,6 +108,53 @@ app.get('/users', (req, res) => {
   }
 });
 
+// Mock API for transactions
+const router = express.Router();
+
+router.get('/', (req, res) => {
+  try {
+    const dbPath = join(__dirname, 'mock', 'db.json');
+    const dbRaw = fs.readFileSync(dbPath, 'utf8');
+    const db = JSON.parse(dbRaw);
+    let transactions = db.transactions || [];
+
+    const { page = 0, pageSize = 10, search = '' } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const size = parseInt(pageSize, 10);
+    const searchQuery = search.toLowerCase();
+
+    if (searchQuery) {
+      transactions = transactions.filter(t =>
+        t.title.toLowerCase().includes(searchQuery) ||
+        t.description.toLowerCase().includes(searchQuery)
+      );
+    }
+
+    const total = transactions.length;
+    const paginated = transactions.slice(pageNumber * size, (pageNumber + 1) * size);
+
+    res.json({ data: paginated, total });
+  } catch (err) {
+    console.error('Get transactions error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+router.get('/drafts', (req, res) => {
+  try {
+    const dbPath = join(__dirname, 'mock', 'db.json');
+    const dbRaw = fs.readFileSync(dbPath, 'utf8');
+    const db = JSON.parse(dbRaw);
+    const drafts = db.transactions.filter(t => t.status === 'draft');
+    res.json(drafts);
+  } catch (err) {
+    console.error('Get drafts error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.use('/transactions', router);
+
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

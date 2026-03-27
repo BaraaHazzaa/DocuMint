@@ -56,13 +56,54 @@
     }
   },
   "newTransaction": {
-    "title": "معاملة جديدة",
-    "field1": "حقل 1",
-    "field2": "حقل 2",
-    "submit": "إرسال"
-  },
-  "validation": {
-    "required": "هذا الحقل مطلوب",
-    "invalidEmail": "البريد الإلكتروني غير صالح"
+    "createTitle": "إنشاء معاملة جديدة",
+    "editTitle": "تعديل المعاملة",
+    "subtitle": "اتبع الخطوات لإكمال معاملتك",
+    "steps": {
+      "details": "تفاصيل المعاملة",
+      "documents": "المستندات",
+      "workflow": "سلسلة الموافقات",
+      "review": "المراجعة"
+    },
+    "fields": {
+      "title": "عنوان المعاملة",
+      "description": "الوصف",
+      "importance": "مستوى الأهمية"
+    },
+    "importance": {
+      "low": "منخفضة",
+      "medium": "متوسطة",
+      "high": "مرتفعة",
+      "urgent": "عاجلة"
+    },
+    "buttons": {
+      "selectFile": "اختيار ملف",
+      "back": "السابق",
+      "next": "التالي",
+      "saveDraft": "حفظ كمسودة",
+      "create": "إنشاء المعاملة",
+      "update": "تحديث المعاملة",
+      "saving": "جاري الحفظ..."
+    },
+    "fileHelpText": "يمكنك تحميل صور أو مستندات PDF أو Word",
+    "selectedFile": "الملف المحدد",
+    "review": {
+      "title": "ملخص المعاملة",
+      "approvers": "عدد الموافقين",
+      "attachment": "المستند المرفق"
+    },
+    "errors": {
+      "loadFailed": "فشل تحميل بيانات المعاملة",
+      "requiredFields": "يرجى إكمال جميع الحقول المطلوبة",
+      "fileRequired": "يرجى تحميل ملف",
+      "workflowRequired": "يرجى تحديد سلسلة الموافقات"
+    },
+    "notifications": {
+      "draftSuccess": "تم حفظ المعاملة كمسودة بنجاح",
+      "draftError": "فشل حفظ المسودة. يرجى المحاولة مرة أخرى.",
+      "createSuccess": "تم إنشاء المعاملة بنجاح",
+      "updateSuccess": "تم تحديث المعاملة بنجاح",
+      "submitError": "فشل إرسال المعاملة. يرجى المحاولة مرة أخرى."
+    }
   }
 }

@@ -1,27 +1,104 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  Container,
-  Typography,
   Box,
-  TextField,
   Button,
-  MenuItem,
-  Paper,
-  Alert,
+  Container,
   Grid,
-  Stepper,
+  Paper,
   Step,
+  StepConnector,
+  stepConnectorClasses,
   StepLabel,
+  Stepper,
+  styled,
+  TextField,
+  Typography,
+  MenuItem,
   LinearProgress,
+  Alert,
 } from '@mui/material';
+import {
+  Check,
+  Description,
+  AccountTree,
+  FileUpload,
+  RateReview,
+} from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { transactionService } from '../../services/api';
 import ApprovalChainSelector from '../workflow/ApprovalChainSelector';
+import SectionHeader from '../common/SectionHeader';
+
+const QontoConnector = styled(StepConnector)(({ theme }) => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: 10,
+    left: 'calc(-50% + 16px)',
+    right: 'calc(50% + 16px)',
+  },
+  [`&.${stepConnectorClasses.active}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  [`&.${stepConnectorClasses.completed}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : '#eaeaf0',
+    borderTopWidth: 3,
+    borderRadius: 1,
+  },
+}));
+
+const QontoStepIconRoot = styled('div')(({ theme, ownerState }) => ({
+  color: theme.palette.mode === 'dark' ? theme.palette.grey[700] : '#eaeaf0',
+  display: 'flex',
+  height: 22,
+  alignItems: 'center',
+  ...(ownerState.active && {
+    color: theme.palette.primary.main,
+  }),
+  '& .QontoStepIcon-completedIcon': {
+    color: theme.palette.primary.main,
+    zIndex: 1,
+    fontSize: 18,
+  },
+  '& .QontoStepIcon-circle': {
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    backgroundColor: 'currentColor',
+  },
+}));
+
+function QontoStepIcon(props) {
+  const { active, completed, className, icon } = props;
+  const icons = {
+    1: <Description />,
+    2: <FileUpload />,
+    3: <AccountTree />,
+    4: <RateReview />,
+  };
+
+  return (
+    <QontoStepIconRoot ownerState={{ active }} className={className}>
+      {completed ? (
+        <Check className="QontoStepIcon-completedIcon" />
+      ) : (
+        icons[String(icon)]
+      )}
+    </QontoStepIconRoot>
+  );
+}
 
 export default function NewTransaction() {
   const navigate = useNavigate();
-  const { id } = useParams(); // Get the transaction ID from the URL
+  const { t } = useTranslation();
+  const { id } = useParams();
   const isEditing = Boolean(id);
 
   const [activeStep, setActiveStep] = useState(0);
@@ -30,7 +107,7 @@ export default function NewTransaction() {
     description: '',
     importance: 'medium',
     file: null,
-    approvalChain: []
+    approvalChain: [],
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,19 +124,18 @@ export default function NewTransaction() {
             title: transaction.title,
             description: transaction.description,
             importance: transaction.importance,
-            file: transaction.file, // This might need adjustment based on how files are handled
+            file: transaction.file,
             approvalChain: transaction.approvalChain,
           });
-          // Handle file preview if a file exists
         } catch {
-          setError('فشل تحميل بيانات المعاملة');
+          setError(t('newTransaction.errors.loadFailed'));
         } finally {
           setLoading(false);
         }
       };
       fetchTransaction();
     }
-  }, [id, isEditing]);
+  }, [id, isEditing, t]);
 
   const onUploadProgress = (progressEvent) => {
     const percentCompleted = Math.round(
@@ -69,10 +145,10 @@ export default function NewTransaction() {
   };
 
   const steps = [
-    { label: 'معلومات المعاملة', description: 'أدخل تفاصيل المعاملة الأساسية' },
-    { label: 'المستندات', description: 'قم بتحميل المستندات المطلوبة' },
-    { label: 'سلسلة الموافقات', description: 'حدد مسار الموافقات المطلوب' },
-    { label: 'المراجعة', description: 'راجع المعلومات قبل الإرسال' }
+    t('newTransaction.steps.details'),
+    t('newTransaction.steps.documents'),
+    t('newTransaction.steps.workflow'),
+    t('newTransaction.steps.review'),
   ];
 
   const handleNext = () => {
@@ -91,11 +167,11 @@ export default function NewTransaction() {
       setUploadProgress(0);
       const transactionData = { ...formData, status: 'draft' };
       await transactionService.saveDraft(transactionData, onUploadProgress);
-      toast.success('تم حفظ المعاملة كمسودة بنجاح');
+      toast.success(t('newTransaction.notifications.draftSuccess'));
       navigate('/dashboard');
     } catch {
-      toast.error('فشل حفظ المسودة. يرجى المحاولة مرة أخرى.');
-      setError('فشل حفظ المسودة. يرجى المحاولة مرة أخرى.');
+      toast.error(t('newTransaction.notifications.draftError'));
+      setError(t('newTransaction.notifications.draftError'));
     } finally {
       setLoading(false);
       setUploadProgress(0);
@@ -106,19 +182,19 @@ export default function NewTransaction() {
     switch (activeStep) {
       case 0:
         if (!formData.title || !formData.description || !formData.importance) {
-          setError('يرجى إكمال جميع الحقول المطلوبة');
+          setError(t('newTransaction.errors.requiredFields'));
           return false;
         }
         break;
       case 1:
         if (!formData.file) {
-          setError('يرجى تحميل ملف');
+          setError(t('newTransaction.errors.fileRequired'));
           return false;
         }
         break;
       case 2:
         if (!formData.approvalChain.length) {
-          setError('يرجى تحديد سلسلة الموافقات');
+          setError(t('newTransaction.errors.workflowRequired'));
           return false;
         }
         break;
@@ -131,21 +207,20 @@ export default function NewTransaction() {
     const { name, value, files } = e.target;
     if (name === 'file') {
       const file = files[0];
-      setUploadProgress(0); // Reset progress on new file selection
+      setUploadProgress(0);
       if (file) {
         setFormData((prev) => ({ ...prev, file }));
-        // Create preview for images, show file info for PDFs and other files
         if (file.type.startsWith('image/')) {
           setFilePreview({
             url: URL.createObjectURL(file),
             type: 'image',
-            name: file.name
+            name: file.name,
           });
         } else {
           setFilePreview({
             url: null,
             type: file.type,
-            name: file.name
+            name: file.name,
           });
         }
       }
@@ -178,12 +253,12 @@ export default function NewTransaction() {
         await transactionService.createTransaction(transactionData, onUploadProgress);
       }
       
-      toast.success(`تم ${isEditing ? 'تحديث' : 'إنشاء'} المعاملة بنجاح`);
+      toast.success(isEditing ? t('newTransaction.notifications.updateSuccess') : t('newTransaction.notifications.createSuccess'));
       navigate('/dashboard');
     } catch {
-      toast.error('فشل إنشاء المعاملة. يرجى المحاولة مرة أخرى.');
-      setError('فشل إنشاء المعاملة. يرجى المحاولة مرة أخرى.');
-      setActiveStep(0); // Return to first step on error
+      toast.error(t('newTransaction.notifications.submitError'));
+      setError(t('newTransaction.notifications.submitError'));
+      setActiveStep(0);
     } finally {
       setLoading(false);
       setUploadProgress(0);
@@ -197,7 +272,7 @@ export default function NewTransaction() {
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <TextField
-                label="عنوان المعاملة"
+                label={t('newTransaction.fields.title')}
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
@@ -207,7 +282,7 @@ export default function NewTransaction() {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                label="الوصف"
+                label={t('newTransaction.fields.description')}
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
@@ -220,17 +295,17 @@ export default function NewTransaction() {
             <Grid item xs={12}>
               <TextField
                 select
-                label="مستوى الأهمية"
+                label={t('newTransaction.fields.importance')}
                 name="importance"
                 value={formData.importance}
                 onChange={handleChange}
                 fullWidth
                 required
               >
-                <MenuItem value="low">منخفضة</MenuItem>
-                <MenuItem value="medium">متوسطة</MenuItem>
-                <MenuItem value="high">مرتفعة</MenuItem>
-                <MenuItem value="urgent">عاجلة</MenuItem>
+                <MenuItem value="low">{t('newTransaction.importance.low')}</MenuItem>
+                <MenuItem value="medium">{t('newTransaction.importance.medium')}</MenuItem>
+                <MenuItem value="high">{t('newTransaction.importance.high')}</MenuItem>
+                <MenuItem value="urgent">{t('newTransaction.importance.urgent')}</MenuItem>
               </TextField>
             </Grid>
           </Grid>
@@ -240,13 +315,18 @@ export default function NewTransaction() {
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Box sx={{ 
-                border: '2px dashed',
-                borderColor: 'grey.300',
-                borderRadius: 1,
-                p: 3,
-                textAlign: 'center'
-              }}>
+              <Box
+                sx={{
+                  border: '2px dashed',
+                  borderColor: 'grey.300',
+                  borderRadius: 2,
+                  p: 4,
+                  textAlign: 'center',
+                  bgcolor: 'action.hover',
+                  transition: 'background-color 0.3s',
+                  '&:hover': { bgcolor: 'action.selected' },
+                }}
+              >
                 <input
                   type="file"
                   id="file-upload"
@@ -259,46 +339,50 @@ export default function NewTransaction() {
                   <Button
                     variant="contained"
                     component="span"
+                    startIcon={<FileUpload />}
                     sx={{ mb: 2 }}
                   >
-                    اختيار ملف
+                    {t('newTransaction.buttons.selectFile')}
                   </Button>
                 </label>
                 <Typography variant="body2" color="text.secondary">
-                  يمكنك تحميل صور أو مستندات PDF أو Word
+                  {t('newTransaction.fileHelpText')}
                 </Typography>
               </Box>
             </Grid>
 
             {filePreview.name && (
               <Grid item xs={12}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                   <Typography variant="subtitle1" gutterBottom>
-                    الملف المحدد:
+                    {t('newTransaction.selectedFile')}:
                   </Typography>
-                  {filePreview.type === 'image' ? (
-                    <Box sx={{ 
-                      maxWidth: '100%',
-                      maxHeight: '300px',
-                      overflow: 'hidden',
-                      borderRadius: 1,
-                      mb: 1
-                    }}>
+                  {filePreview.type.startsWith('image/') ? (
+                    <Box
+                      sx={{
+                        maxWidth: '100%',
+                        maxHeight: '300px',
+                        overflow: 'hidden',
+                        borderRadius: 1,
+                        mb: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
                       <img
                         src={filePreview.url}
-                        alt="معاينة"
+                        alt="Preview"
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'contain'
+                          objectFit: 'contain',
                         }}
                       />
                     </Box>
                   ) : (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography>
-                        {filePreview.name}
-                      </Typography>
+                      <Description />
+                      <Typography>{filePreview.name}</Typography>
                     </Box>
                   )}
                   {uploadProgress > 0 && uploadProgress < 100 && (
@@ -316,7 +400,7 @@ export default function NewTransaction() {
         return (
           <ApprovalChainSelector
             value={formData.approvalChain}
-            onChange={(newChain) => setFormData(prev => ({ ...prev, approvalChain: newChain }))}
+            onChange={(newChain) => setFormData((prev) => ({ ...prev, approvalChain: newChain }))}
           />
         );
 
@@ -324,21 +408,19 @@ export default function NewTransaction() {
         return (
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="h6" gutterBottom>ملخص المعاملة</Typography>
+              <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, bgcolor: 'background.default' }}>
+                <Typography variant="h6" gutterBottom>{t('newTransaction.review.title')}</Typography>
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle1">العنوان: {formData.title}</Typography>
-                  <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
+                  <Typography variant="subtitle1"><strong>{t('newTransaction.fields.title')}:</strong> {formData.title}</Typography>
+                  <Typography variant="body1" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
                     {formData.description}
                   </Typography>
+                  <Chip label={`${t('newTransaction.fields.importance')}: ${t(`newTransaction.importance.${formData.importance}`)}`} sx={{ mt: 1 }} />
                   <Typography variant="subtitle2" sx={{ mt: 2 }}>
-                    مستوى الأهمية: {formData.importance}
+                    <strong>{t('newTransaction.review.approvers')}:</strong> {formData.approvalChain.length}
                   </Typography>
                   <Typography variant="subtitle2" sx={{ mt: 1 }}>
-                    عدد الموافقين: {formData.approvalChain.length}
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ mt: 1 }}>
-                    المستند المرفق: {filePreview.name}
+                    <strong>{t('newTransaction.review.attachment')}:</strong> {filePreview.name}
                   </Typography>
                 </Box>
               </Paper>
@@ -352,17 +434,18 @@ export default function NewTransaction() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }} dir="rtl">
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom align="center" sx={{ mb: 4 }}>
-          {isEditing ? 'تعديل المعاملة' : 'إنشاء معاملة جديدة'}
-        </Typography>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper elevation={0} sx={{ p: { xs: 2, md: 4 }, borderRadius: 4, border: '1px solid', borderColor: 'divider' }}>
+        <SectionHeader
+          title={isEditing ? t('newTransaction.editTitle') : t('newTransaction.createTitle')}
+          subtitle={t('newTransaction.subtitle')}
+        />
 
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((step) => (
-            <Step key={step.label}>
-              <StepLabel>
-                <Typography variant="body2">{step.label}</Typography>
+        <Stepper alternativeLabel activeStep={activeStep} connector={<QontoConnector />} sx={{ mb: 5 }}>
+          {steps.map((label, index) => (
+            <Step key={label}>
+              <StepLabel StepIconComponent={(props) => <QontoStepIcon {...props} icon={index + 1} />}>
+                {label}
               </StepLabel>
             </Step>
           ))}
@@ -374,46 +457,49 @@ export default function NewTransaction() {
           </Alert>
         )}
 
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ mt: 4, minHeight: 300 }}>
           {renderStepContent()}
         </Box>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
           <Button
             variant="outlined"
             onClick={handleBack}
-            disabled={activeStep === 0}
+            disabled={activeStep === 0 || loading}
           >
-            السابق
+            {t('newTransaction.buttons.back')}
           </Button>
 
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={handleSaveDraft}
-            disabled={loading}
-            sx={{ mx: 1 }}
-          >
-            حفظ كمسودة
-          </Button>
-
-          {activeStep === steps.length - 1 ? (
+          <Box>
             <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
+              variant="text"
+              color="secondary"
+              onClick={handleSaveDraft}
               disabled={loading}
+              sx={{ mx: 1 }}
             >
-              {loading ? 'جاري الحفظ...' : isEditing ? 'تحديث المعاملة' : 'إنشاء المعاملة'}
+              {t('newTransaction.buttons.saveDraft')}
             </Button>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-            >
-              التالي
-            </Button>
-          )}
+
+            {activeStep === steps.length - 1 ? (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? t('newTransaction.buttons.saving') : isEditing ? t('newTransaction.buttons.update') : t('newTransaction.buttons.create')}
+              </Button>
+            ) : (
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                disabled={loading}
+              >
+                {t('newTransaction.buttons.next')}
+              </Button>
+            )}
+          </Box>
         </Box>
       </Paper>
     </Container>
