@@ -21,6 +21,7 @@ import TransactionDetails from './components/pages/TransactionDetails';
 import Profile from './components/pages/Profile';
 import Reports from './components/pages/Reports';
 import UserManagement from './components/pages/admin/UserManagement';
+import PermissionsManagement from './components/pages/admin/PermissionsManagement'; // Import the new component
 
 // This component will contain the routes accessible within the main layout
 const AppRoutes = () => (
@@ -33,6 +34,7 @@ const AppRoutes = () => (
     <Route path="/profile" element={<Profile />} />
     <Route path="/reports" element={<Reports />} />
     <Route path="/admin/users" element={<UserManagement />} />
+    <Route path="/admin/permissions" element={<PermissionsManagement />} />
     <Route path="/" element={<Navigate to="/dashboard" />} />
   </Routes>
 );

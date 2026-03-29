@@ -145,7 +145,9 @@ export function WorkflowProvider({ children }) {
     action,
     userId,
     comment,
-    signature
+    signature,
+    transactionCreatorId, // Added to identify the transaction creator
+    escalationUserId, // Added for escalation
   }) => {
   try {
     const workflow = workflows[transactionId];
@@ -184,8 +186,21 @@ export function WorkflowProvider({ children }) {
           if (currentApproverIndex < approvalChain.length - 1) {
             nextApproverIndex++;
             nextStatus = WORKFLOW_STEPS.IN_PROGRESS;
+            // Notify next approver
+            const nextApprover = approvalChain[nextApproverIndex];
+            showAlert(
+              `لديك معاملة جديدة في انتظار المراجعة`,
+              'info',
+              nextApprover.approverId
+            );
           } else {
             nextStatus = WORKFLOW_STEPS.COMPLETED;
+            // Notify creator of final approval
+            showAlert(
+              `تمت الموافقة على معاملتك رقم ${transactionId}`,
+              'success',
+              transactionCreatorId
+            );
           }
           break;
 
@@ -197,21 +212,59 @@ export function WorkflowProvider({ children }) {
             comment
           };
           nextStatus = WORKFLOW_STEPS.REJECTED;
+          // Notify creator of rejection
+          showAlert(
+            `تم رفض معاملتك رقم ${transactionId}`,
+            'error',
+            transactionCreatorId
+          );
           break;
 
         case WORKFLOW_ACTIONS.ESCALATE:
-          // Find next available higher-level approver
-          const nextHigherApprover = approvalChain.findIndex((approver, index) => 
-            index > currentApproverIndex && 
-            ['director', 'vice_manager'].includes(approver.role)
-          );
+          if (!escalationUserId) throw new Error('User to escalate to is required');
 
-          if (nextHigherApprover === -1) {
-            throw new Error('No higher level approver available');
-          }
+          // Add the new approver to the chain right after the current one
+          const newApprover = {
+            approverId: escalationUserId,
+            status: 'pending',
+            order: currentApproverIndex + 1,
+            deadline: calculateDeadline(workflow.importance, currentApproverIndex + 1),
+          };
 
-          nextApproverIndex = nextHigherApprover;
+          // Shift order of subsequent approvers
+          const newApprovalChain = [
+            ...approvalChain.slice(0, currentApproverIndex + 1),
+            newApprover,
+            ...approvalChain.slice(currentApproverIndex + 1).map(a => ({ ...a, order: a.order + 1 })),
+          ];
+          
           nextStatus = WORKFLOW_STEPS.ESCALATED;
+          nextApproverIndex = currentApproverIndex + 1;
+
+          // Notify the new approver
+          showAlert(
+            `تم تصعيد معاملة إليك للمراجعة`,
+            'warning',
+            escalationUserId
+          );
+          // Notify the creator
+          showAlert(
+            `تم تصعيد معاملتك رقم ${transactionId}`,
+            'info',
+            transactionCreatorId
+          );
+          
+          workflow.approvalChain = newApprovalChain; // Mutate for state update
+          break;
+
+        case WORKFLOW_ACTIONS.COMMENT:
+          approvalChain[currentApproverIndex] = {
+            ...currentApprover,
+            status: 'commented',
+            comment,
+            actionDate: new Date(),
+          };
+          nextStatus = WORKFLOW_STEPS.IN_PROGRESS;
           break;
 
         default:

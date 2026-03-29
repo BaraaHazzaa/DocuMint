@@ -25,6 +25,7 @@ import { useWorkflow } from '../../context/WorkflowContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotificationManager } from '../../hooks/useNotificationManager';
 import SignatureComponent from '../signature/SignatureComponent';
+import SignatureSection from '../signature/SignatureSection';
 import WorkflowStatus from '../workflow/WorkflowStatus';
 import ApprovalActionUI from '../workflow/ApprovalActionUI';
 import { WORKFLOW_ACTIONS, WORKFLOW_STEPS } from '../../context/WorkflowContext';
@@ -80,7 +81,8 @@ export default function TransactionDetails() {
         action,
         userId: user.id,
         comment: newComment,
-        signature: signatureData
+        signature: signatureData,
+        transactionCreatorId: transaction.creatorId, // Pass creator ID for notifications
       });
 
       if (result.success) {
@@ -136,7 +138,15 @@ export default function TransactionDetails() {
           <Typography variant="body2" color="textSecondary">
             الحالة: {transaction.status}
           </Typography>
+          <Chip label={`الأهمية: ${transaction.importance}`} sx={{ mt: 1 }} />
         </Paper>
+
+        {canTakeAction(workflowStatus) && (
+          <SignatureSection
+            transactionId={id}
+            onSignatureComplete={handleSignatureSave}
+          />
+        )}
 
         <Typography variant="h6" gutterBottom>
           المستند

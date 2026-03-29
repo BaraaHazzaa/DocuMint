@@ -13,6 +13,7 @@ import {
 import { WORKFLOW_ACTIONS } from '../../context/WorkflowContext';
 import SignatureComponent from '../signature/SignatureComponent';
 import RejectionModal from './RejectionModal';
+import EscalationDialog from './EscalationDialog';
 
 export default function ApprovalActionUI({
   onAction,
@@ -24,6 +25,7 @@ export default function ApprovalActionUI({
   const [comment, setComment] = useState('');
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showEscalationDialog, setShowEscalationDialog] = useState(false);
   const [error, setError] = useState('');
 
   const handleActionClick = (action) => {
@@ -32,12 +34,14 @@ export default function ApprovalActionUI({
       setShowSignatureDialog(true);
     } else if (action === WORKFLOW_ACTIONS.REJECT) {
       setShowRejectionModal(true);
+    } else if (action === WORKFLOW_ACTIONS.ESCALATE) {
+      setShowEscalationDialog(true);
     } else {
       handleAction(action);
     }
   };
 
-  const handleAction = async (action, signatureData = null) => {
+  const handleAction = async (action, signatureData = null, escalationUserId = null) => {
     try {
       setError('');
       
@@ -50,13 +54,15 @@ export default function ApprovalActionUI({
       await onAction({
         action,
         comment,
-        signature: signatureData
+        signature: signatureData,
+        escalationUserId, // Pass the user ID for escalation
       });
       
       // Clear form state
       setComment('');
       setShowSignatureDialog(false);
       setShowRejectionModal(false);
+      setShowEscalationDialog(false);
       setActionType(null);
     } catch (error) {
       setError(error.message || 'حدث خطأ أثناء معالجة الإجراء');
@@ -65,6 +71,11 @@ export default function ApprovalActionUI({
 
   const handleSignatureSave = (signatureData) => {
     handleAction(WORKFLOW_ACTIONS.APPROVE, signatureData);
+  };
+
+  const handleEscalate = (escalationUserId) => {
+    handleAction(WORKFLOW_ACTIONS.ESCALATE, null, escalationUserId);
+    setShowEscalationDialog(false);
   };
 
   const handleRejectionSubmit = (rejectionReason) => {
@@ -111,7 +122,7 @@ export default function ApprovalActionUI({
           رفض
         </Button>
         <Button
-          variant="contained"
+          variant="outlined"
           color="warning"
           onClick={() => handleActionClick(WORKFLOW_ACTIONS.ESCALATE)}
           disabled={disabled || loading}
@@ -120,12 +131,8 @@ export default function ApprovalActionUI({
         </Button>
       </Box>
 
-      <Dialog
-        open={showSignatureDialog}
-        onClose={() => setShowSignatureDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
+      {/* Signature Dialog */}
+      <Dialog open={showSignatureDialog} onClose={() => setShowSignatureDialog(false)}>
         <DialogTitle>إضافة التوقيع</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
@@ -138,10 +145,18 @@ export default function ApprovalActionUI({
         </DialogContent>
       </Dialog>
 
+      {/* Rejection Modal */}
       <RejectionModal
         open={showRejectionModal}
         onClose={() => setShowRejectionModal(false)}
         onSubmit={handleRejectionSubmit}
+      />
+
+      {/* Escalation Dialog */}
+      <EscalationDialog
+        open={showEscalationDialog}
+        onClose={() => setShowEscalationDialog(false)}
+        onEscalate={handleEscalate}
       />
     </Box>
   );

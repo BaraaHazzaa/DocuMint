@@ -1,4 +1,4 @@
-import { api } from './api';
+import api from './api';
 
 const hashSignature = async (signatureData) => {
   // In a real implementation, this would use Web Crypto API

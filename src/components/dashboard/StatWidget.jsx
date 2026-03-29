@@ -1,4 +1,5 @@
 import { Paper, Typography, Box, CircularProgress, alpha, useTheme } from '@mui/material';
+import { Link } from 'react-router-dom';
 import SkeletonLoader from '../common/SkeletonLoader';
 
 /**
@@ -10,13 +11,14 @@ import SkeletonLoader from '../common/SkeletonLoader';
  * @param {React.ReactNode} props.icon - The icon to display.
  * @param {boolean} props.loading - Whether the widget is in a loading state.
  * @param {string} props.color - The color of the statistic (default: 'primary').
+ * @param {string} [props.link] - Optional URL to link to.
  */
-const StatWidget = ({ title, value, icon, loading, color = 'primary' }) => {
+const StatWidget = ({ title, value, icon, loading, color = 'primary', link }) => {
   const theme = useTheme();
   const bgColor = alpha(theme.palette[color].main, 0.1);
   const iconColor = theme.palette[color].main;
 
-  return (
+  const content = (
     <Paper
       elevation={0}
       sx={{
@@ -28,6 +30,11 @@ const StatWidget = ({ title, value, icon, loading, color = 'primary' }) => {
         backgroundColor: bgColor,
         borderRadius: theme.shape.borderRadius,
         border: `1px solid ${alpha(theme.palette[color].main, 0.2)}`,
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        '&:hover': link ? {
+          transform: 'translateY(-4px)',
+          boxShadow: `0 4px 20px 0 ${alpha(theme.palette[color].main, 0.25)}`,
+        } : {},
       }}
     >
       {loading ? (
@@ -47,6 +54,16 @@ const StatWidget = ({ title, value, icon, loading, color = 'primary' }) => {
       )}
     </Paper>
   );
+
+  if (link) {
+    return (
+      <Link to={link} style={{ textDecoration: 'none', height: '100%', display: 'block' }}>
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 };
 
 export default StatWidget;
